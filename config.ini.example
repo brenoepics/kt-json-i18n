@@ -1,0 +1,25 @@
+[api]
+provider=azure
+
+[logger]
+# TRACE, DEBUG, INFO, WARNING, ERROR, CRITICAL
+level=INFO
+
+[azure]
+# Get your subscription key here: https://portal.azure.com/#create/Microsoft.CognitiveServicesTextTranslation
+key=example_key
+region=
+
+[translate]
+# Available languages: https://docs.microsoft.com/en-us/azure/cognitive-services/translator/language-support
+from=en
+to=pt;es;zh-Hans
+
+[files]
+# input/output directory or file path
+input=input/
+recursive=true
+output=output/
+output_template={sub_dir}{to_lang}/{input_filename}.{input_extension}
+indentation=2
+
