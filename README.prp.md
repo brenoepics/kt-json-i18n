@@ -1,4 +1,4 @@
-# JSON Translator for Java (1.0)
+# JSON Translator for Java ({_ currentVersion _})
 
 ![Java](https://img.shields.io/badge/java-%3E%3D8-blue)
 ![Kotlin](https://img.shields.io/badge/kotlin-%3E%3D2.0.0-blue)
@@ -29,7 +29,7 @@ This project is a JSON translator that uses different translation APIs to transl
 
 1. Download latest version from [releases](https://github.com/brenoepics/json-translate/releases/latest) and unzip.
 2. Update and rename `config.ini.example` to `config.ini`.
-3. Run the project using the command `java -jar json-translator-1.0-jar-with-dependencies.jar`
+3. Run the project using the command `java -jar json-translator-{_currentVersion_}-jar-with-dependencies.jar`
    
 ## Contributing
 

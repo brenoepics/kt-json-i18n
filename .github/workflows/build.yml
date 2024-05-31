@@ -11,7 +11,7 @@ jobs:
 
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
@@ -23,7 +23,25 @@ jobs:
           distribution: 'adopt'
           server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
           settings-path: ${{ github.workspace }} # location for the settings.xml file
+          
+      - name: Install xmllint
+        run: sudo apt-get install -y libxml2-utils
+        
+      - name: Extract version from pom.xml
+        id: extract_version
+        run: |
+          version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" pom.xml)
+          echo "##[set-output name=VERSION;]$version"
 
+      - name: Update PRP Files
+        uses: CIFriends/prp-preprocessor@v1
+        with:
+         ignoredDirs: |
+           docs
+           src
+           target
+        env:
+          currentVersion: ${{ steps.extract_version.outputs.VERSION }}
 
       - name: Build Plugins
         run: mvn clean -B package --file pom.xml
