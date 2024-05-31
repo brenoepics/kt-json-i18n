@@ -23,7 +23,10 @@ jobs:
           distribution: 'adopt'
           server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
           settings-path: ${{ github.workspace }} # location for the settings.xml file
-
+          
+      - name: Install xmllint
+        run: sudo apt-get install -y libxml2-utils
+        
       - name: Extract version from pom.xml
         id: extract_version
         run: |
