@@ -27,14 +27,10 @@ This project is a JSON translator that uses different translation APIs to transl
 
 ### Usage
 
-1. Rename `config.ini.example` to `config.ini`.
+1. Download latest version from [releases](https://github.com/brenoepics/json-translate/releases/latest) and unzip.
+2. Update and rename `config.ini.example` to `config.ini`.
+3. Run the project using the command `java -jar json-translator-1.0-jar-with-dependencies.jar`
    
-To run the project, use the following command:
-
-```bash
-mvn exec:java -Dexec.mainClass="io.github.brenoepics.Translate"
-```
-
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
