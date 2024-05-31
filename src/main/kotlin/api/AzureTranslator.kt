@@ -18,7 +18,8 @@ import java.util.concurrent.*
 class AzureTranslator(
     apiKey: String, region: String
 ) : Translator {
-    private var azureApi: AzureApi = AzureApiBuilder().setKey(apiKey).region(region).executorService(newAt4jDefault()).build()
+    private var azureApi: AzureApi =
+        AzureApiBuilder().setKey(apiKey).region(region).executorService(newAt4jDefault()).build()
     private val cache = HashMap<String, HashMap<String, String>>()
 
     companion object {
@@ -26,12 +27,7 @@ class AzureTranslator(
         val log: Logger = LoggerFactory.getLogger(AzureTranslator::class.java)
         fun newAt4jDefault(): ExecutorService {
             return ThreadPoolExecutor(
-                1,
-                Int.MAX_VALUE,
-                60L,
-                TimeUnit.SECONDS,
-                SynchronousQueue(),
-                AT4JThreadFactory("AT4J - %d", false)
+                1, Int.MAX_VALUE, 60L, TimeUnit.SECONDS, SynchronousQueue(), AT4JThreadFactory("AT4J - %d", false)
             )
         }
     }
@@ -52,7 +48,7 @@ class AzureTranslator(
      */
     override fun translate(
         texts: Map<String, String>, source: String, target: Set<String>
-    ): CompletableFuture<Unit> {
+    ) {
         val langCount: Int = target.size
 
         val groupedTranslations: MutableMap<Int, MutableList<String>> = LinkedHashMap()
@@ -84,16 +80,11 @@ class AzureTranslator(
             "Translating {} texts in {} groups", texts.size, groupedTranslations.size
         )
 
-        // Create a CompletableFuture that completes immediately
-        var futureChain = CompletableFuture.completedFuture<Unit>(null)
-
         // Chain translation requests sequentially
         for (set in groupedTranslations.values) {
             val params = TranslateParams(set, target).setSourceLanguage(source)
-            futureChain = future(futureChain, params)
+            future(CompletableFuture.completedFuture(Unit), params).join()
         }
-
-        return futureChain
     }
 
     override fun dispose() {
@@ -106,7 +97,7 @@ class AzureTranslator(
         var chain = futureChain
         chain = chain.thenCompose { _ ->
             azureApi.translate(params)
-        }.thenApply { response: Optional<TranslationResponse> ->
+        }.thenApply { response ->
             onTranslate(response)
         }
         return chain

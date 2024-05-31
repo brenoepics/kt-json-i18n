@@ -10,6 +10,6 @@ interface Translator {
         texts: Map<String, String>,
         source: String,
         target: Set<String>
-    ): CompletableFuture<Unit>
+    )
     fun dispose()
 }

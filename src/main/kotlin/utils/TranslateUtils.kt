@@ -35,7 +35,7 @@ class TranslateUtils {
                 filesData[it] = file
                 log.debug("Read file: {}", it)
             }
-            config.api?.translate(toTranslate, config.from, config.to)?.join()
+            config.api?.translate(toTranslate, config.from, config.to)
             config.api?.let { updateFileData(config, dirFiles, filesData, it) }
             log.info("Translation finished!")
             config.api?.dispose()
