@@ -32,8 +32,8 @@ class AzureTranslator(
         }
     }
 
-    override fun getCache(): HashMap<String, HashMap<String, String>> {
-        return cache
+    override fun getLanguageCache(langCode: String): HashMap<String, String> {
+        return cache[langCode] ?: HashMap()
     }
 
     override fun addToCache(lang: String, translations: HashMap<String, String>) {
@@ -49,46 +49,58 @@ class AzureTranslator(
     override fun translate(
         texts: Map<String, String>, source: String, target: Set<String>
     ) {
+        val (langCount: Int, requests: MutableMap<Int, MutableList<String>>) = parseRequests(target, texts)
+        log.info(
+            "Translating {} texts to {} languages with {} requests", texts.size, langCount, requests.size
+        )
+
+        // Chain translation requests sequentially
+        for (set in requests.values) {
+            val params = TranslateParams(set, target).setSourceLanguage(source)
+            future(CompletableFuture.completedFuture(Unit), params).join()
+        }
+    }
+
+    /**
+     * Parses the translation requests based on the maximum characters allowed.
+     * @param target The set of target languages.
+     * @param texts The map of texts to translate.
+     * @return A pair with the number of target languages and the translation requests.
+     * @link https://docs.microsoft.com/en-us/azure/cognitive-services/translator/request-limits
+     * @see MAX_CHARACTERS
+     * @see TranslateParams
+     */
+    private fun parseRequests(
+        target: Set<String>,
+        texts: Map<String, String>
+    ): Pair<Int, MutableMap<Int, MutableList<String>>> {
         val langCount: Int = target.size
 
-        val groupedTranslations: MutableMap<Int, MutableList<String>> = LinkedHashMap()
+        val requests: MutableMap<Int, MutableList<String>> = LinkedHashMap()
         val requested: MutableSet<String> = HashSet()
-        var groupKey = 0
+        var reqKey = 0
         var runningTotal = 0
 
         for (translation in texts.values) {
             val size = translation.length * langCount
             if (runningTotal + size > MAX_CHARACTERS) {
                 runningTotal = size
-                groupKey++
+                reqKey++
             } else {
                 runningTotal += size
             }
             requested.add(translation)
-            groupedTranslations.computeIfAbsent(
-                groupKey
+            requests.computeIfAbsent(
+                reqKey
             ) { ArrayList() }.add(translation)
         }
 
         if (!texts.values.containsAll(requested)) {
             val difference: MutableSet<String> = HashSet<String>(texts.values)
             difference.removeAll(requested)
-            groupedTranslations[++groupKey] = ArrayList(difference)
+            requests[++reqKey] = ArrayList(difference)
         }
-
-        log.info(
-            "Translating {} texts in {} groups", texts.size, groupedTranslations.size
-        )
-
-        // Chain translation requests sequentially
-        for (set in groupedTranslations.values) {
-            val params = TranslateParams(set, target).setSourceLanguage(source)
-            future(CompletableFuture.completedFuture(Unit), params).join()
-        }
-    }
-
-    override fun dispose() {
-        azureApi.disconnect()
+        return Pair(langCount, requests)
     }
 
     private fun future(
@@ -104,12 +116,16 @@ class AzureTranslator(
     }
 
     private fun onTranslate(response: Optional<TranslationResponse>) {
-        if (!response.isPresent) return
-
-        response.get().resultList.forEach(::handleResult)
+        if (response.isPresent) {
+            response.get().resultList.forEach(::handleResult)
+        }
     }
 
     private fun handleResult(result: TranslationResult) {
         result.translations.forEach { cache.computeIfAbsent(it.languageCode) { HashMap() }[result.baseText] = it.text }
+    }
+
+    override fun dispose() {
+        azureApi.disconnect()
     }
 }
