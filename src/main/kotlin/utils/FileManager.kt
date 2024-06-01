@@ -3,6 +3,7 @@ package io.github.brenoepics.utils
 import org.ini4j.Ini
 import org.json.JSONArray
 import org.json.JSONObject
+import org.json.JSONTokener
 import org.slf4j.LoggerFactory
 import translation.TranslationException
 import java.io.File
@@ -37,10 +38,22 @@ class FileManager {
             return result
         }
 
-        fun readJsonFile(path: Path): JSONObject {
+        fun readJsonFile(path: Path): Any? {
             val jsonStr = String(Files.readAllBytes(path))
-            val jsonObject = JSONObject(jsonStr)
-            return jsonObject
+            return readJSON(jsonStr)
+        }
+
+        private fun readJSON(str: String): Any? {
+            return try {
+                JSONObject(JSONTokener(str))
+            } catch (e: Exception) {
+                try {
+                    JSONArray(JSONTokener(str))
+                } catch (e: Exception) {
+                    log.error("Error reading JSON string: $str", e)
+                    null
+                }
+            }
         }
 
         @Throws(IOException::class)
@@ -50,7 +63,7 @@ class FileManager {
             val relativePath = sourceDirPath.relativize(path)
             val fileName = relativePath.fileName.toString()
             var subDir = ""
-            if(relativePath.parent != null && relativePath.parent.toString() != outputDirPath.toString()) {
+            if (relativePath.parent != null && relativePath.parent.toString() != outputDirPath.toString()) {
                 subDir = relativePath.parent.toString() + "/"
             }
             val inputFilename = fileName.substringBeforeLast(".")
@@ -66,22 +79,25 @@ class FileManager {
         }
 
         private fun generateTemplate(
-            outputTemplate: String,
-            subDir: String,
-            lang: String,
-            inputFilename: String,
-            inputExtension: String
+            outputTemplate: String, subDir: String, lang: String, inputFilename: String, inputExtension: String
         ): String {
-            return outputTemplate.replace("{sub_dir}", subDir)
-                .replace("{to_lang}", lang)
-                .replace("{input_filename}", inputFilename)
-                .replace("{input_extension}", inputExtension)
-        }
-        private fun writeJsonFile(newFilePath: Path, newJson: JSONObject, indentation: Int = 2) {
-            Files.write(newFilePath, newJson.toString(indentation).toByteArray())
+            return outputTemplate.replace("{sub_dir}", subDir).replace("{to_lang}", lang)
+                .replace("{input_filename}", inputFilename).replace("{input_extension}", inputExtension)
         }
 
-        private fun replaceTextInJson(obj: Any, translations: HashMap<String, String>): Any {
+        private fun writeJsonFile(newFilePath: Path, newJson: Any?, indentation: Int) {
+            if (newJson as? JSONObject != null) {
+                Files.write(newFilePath, newJson.toString(indentation).toByteArray())
+                return
+            }
+            if (newJson as? JSONArray != null) {
+                Files.write(newFilePath, newJson.toString(indentation).toByteArray())
+                return
+            }
+            log.error("Error writing JSON file: $newJson, JSON is not JSONObject or JSONArray")
+        }
+
+        private fun replaceTextInJson(obj: Any, translations: Map<String, String>): Any {
             when (obj) {
                 is JSONObject -> for (key in obj.keySet()) {
                     obj.put(key, replaceTextInJson(obj[key], translations))
@@ -96,7 +112,8 @@ class FileManager {
             return obj
         }
 
-        fun getJsonTexts(obj: Any): HashMap<String, String> {
+        fun getJsonTexts(obj: Any?): HashMap<String, String> {
+            if (obj == null) return HashMap()
             val texts = HashMap<String, String>()
             return getJsonTexts(obj, texts)
         }
@@ -110,17 +127,18 @@ class FileManager {
             return texts
         }
 
-        fun java.util.HashMap<String, String>.writeTranslation(
+        fun Map<String, String>.writeTranslation(
             template: String,
             sourceDirPath: Path,
-            jsonObject: JSONObject,
+            json: Any?,
             outputDirPath: Path?,
             path: Path,
             lang: String,
             indentation: Int
         ) {
-            val newJson = JSONObject(jsonObject.toString())
-            replaceTextInJson(newJson, this)
+            if (json != null) {
+                replaceTextInJson(json, this)
+            }
             val newFilePath = outputDirPath?.let {
                 try {
                     getNewFilePath(template, sourceDirPath, outputDirPath, path, lang)
@@ -128,10 +146,9 @@ class FileManager {
                     log.error("Error creating new file path (check your output_template)", e)
                     null
                 }
-
             }
             if (newFilePath != null) {
-                writeJsonFile(newFilePath, newJson, indentation)
+                writeJsonFile(newFilePath, json, indentation)
             }
         }
 
