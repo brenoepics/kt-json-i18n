@@ -2,6 +2,7 @@
 
 ![Java](https://img.shields.io/badge/java-%3E%3D8-blue)
 ![Kotlin](https://img.shields.io/badge/kotlin-%3E%3D2.0.0-blue)
+
 An internationalization tool that translates JSON files using different translation APIs.
 
 ### Supported API's
