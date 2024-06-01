@@ -1,16 +1,8 @@
-# JSON Translator for Java ({_ currentVersion _})
+# Kotlin JSON Internationalization ({_ currentVersion _})
 
 ![Java](https://img.shields.io/badge/java-%3E%3D8-blue)
 ![Kotlin](https://img.shields.io/badge/kotlin-%3E%3D2.0.0-blue)
-
-This project is a JSON translator that uses different translation APIs to translate JSON files.
-
-## Features
-
-- Translation API management: The project includes a `TranslationManager` class that manages different translation APIs. It creates the APIs and stores them in an EnumMap.
-- Translation API building: The `ApiBuilder` class is an abstract class for building translation APIs. It currently includes an implementation for Azure.
-- JSON translation: The `Translate` class is the main class that starts the translation process. It reads an ini file and starts the translation process.
-- Custom indentation, output template...
+An internationalization tool that translates JSON files using different translation APIs.
 
 ### Supported API's
 
@@ -27,10 +19,11 @@ This project is a JSON translator that uses different translation APIs to transl
 
 ### Usage
 
-1. Download latest version from [releases](https://github.com/brenoepics/json-translate/releases/latest) and unzip.
-2. Update and rename `config.ini.example` to `config.ini`.
-3. Run the project using the command `java -jar json-translator-{_currentVersion_}-jar-with-dependencies.jar`
-   
+1. Download latest version from [releases](/releases/latest) and unzip.
+2. Rename `config.ini.example` to `config.ini`.
+3. Fill in the `config.ini` file with your Azure credentials, input/output paths, and other settings.
+4. Run the project using the command `java -jar kt-json-i18n-{_currentVersion_}-jar-with-dependencies.jar`
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
