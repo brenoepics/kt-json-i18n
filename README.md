@@ -2,6 +2,7 @@
 
 ![Java](https://img.shields.io/badge/java-%3E%3D8-blue)
 ![Kotlin](https://img.shields.io/badge/kotlin-%3E%3D2.0.0-blue)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=brenoepics_json-translate&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=brenoepics_json-translate)
 
 An internationalization tool that translates JSON files using different translation APIs.
 
